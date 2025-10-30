@@ -1,7 +1,7 @@
 package contact
 
 type Create struct {
-	Phones    []string
 	FirstName string
 	LastName  string
+	Phones    []string
 }

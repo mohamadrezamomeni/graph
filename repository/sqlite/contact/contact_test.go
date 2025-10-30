@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 func TestCreateContact(t *testing.T) {
 	defer contact.deleteAll()
 
-	c1 := &contactRepoDto.CreateContact{
+	c1 := &contactRepoDto.Create{
 		FirstName: "ali",
 		LastName:  "pirzadeh",
 		Phones:    []string{"+989123456789", "+989113456789"},
@@ -44,7 +44,7 @@ func TestCreateContact(t *testing.T) {
 		t.Fatalf("somehting went wrong that was %v", err)
 	}
 
-	c2 := &contactRepoDto.CreateContact{
+	c2 := &contactRepoDto.Create{
 		FirstName: "ali",
 		LastName:  "pirzadeh",
 		Phones:    []string{"+989123456789", "+989383456789"},

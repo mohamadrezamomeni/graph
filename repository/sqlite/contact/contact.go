@@ -4,11 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/mohamadrezamomeni/graph/repository/sqlite"
+
 	contactRepoDto "github.com/mohamadrezamomeni/graph/dto/repository/contact"
 	appErr "github.com/mohamadrezamomeni/graph/pkg/error"
 )
 
-func (c *Contact) Create(createDto *contactRepoDto.CreateContact) error {
+func (c *Contact) Create(createDto *contactRepoDto.Create) error {
 	scope := "repository.contact.create"
 
 	tx, err := c.db.Conn().Begin()
@@ -38,7 +40,7 @@ func (c *Contact) Create(createDto *contactRepoDto.CreateContact) error {
 	return nil
 }
 
-func (c *Contact) createContact(tx *sql.Tx, createDto *contactRepoDto.CreateContact) (string, error) {
+func (c *Contact) createContact(tx *sql.Tx, createDto *contactRepoDto.Create) (string, error) {
 	scope := "repository.repository.createContact"
 
 	var id string
@@ -75,6 +77,10 @@ func (c *Contact) assignPhones(tx *sql.Tx, contactID string, phones []string) er
 	}
 
 	_, err := tx.Exec(query, args...)
+
+	if err != nil && sqlite.IsDuplicateError(err) {
+		return appErr.Wrap(err).Scope(scope).Input(contactID, phones).Duplicate().Errorf("the phone numbers you have sent contain duplicate phone numbers")
+	}
 	if err != nil {
 		return appErr.Wrap(err).Input(contactID, phones).UnExpected().Scope(scope).DebuggingError()
 	}

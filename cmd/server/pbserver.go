@@ -10,6 +10,10 @@ import (
 	"github.com/mohamadrezamomeni/graph/pkg/config"
 	appLogger "github.com/mohamadrezamomeni/graph/pkg/log"
 	"github.com/mohamadrezamomeni/graph/repository/migrate"
+	"github.com/mohamadrezamomeni/graph/repository/sqlite"
+	contactSqlite "github.com/mohamadrezamomeni/graph/repository/sqlite/contact"
+	contactService "github.com/mohamadrezamomeni/graph/service/contact"
+	contactValidator "github.com/mohamadrezamomeni/graph/validator/contact"
 )
 
 func main() {
@@ -19,8 +23,12 @@ func main() {
 
 	migration.UP()
 
+	contactSvc, contactValidator := setupServices(cfg)
+
 	server := httpserver.New(
 		&cfg.HTTP,
+		contactSvc,
+		contactValidator,
 	)
 
 	go func() {
@@ -37,4 +45,17 @@ func main() {
 	if err := server.Shutdown(ctxWithTimeout); err != nil {
 		appLogger.Info(err.Error())
 	}
+}
+
+func setupServices(cfg *config.Config) (
+	*contactService.Contact,
+	*contactValidator.Validator,
+) {
+	db := sqlite.New(&cfg.DB)
+
+	contactRepo := contactSqlite.New(db)
+	contactSvc := contactService.New(contactRepo)
+
+	contactValidator := contactValidator.New()
+	return contactSvc, contactValidator
 }

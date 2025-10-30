@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.24.9
 
 require (
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/rubenv/sql-migrate v1.8.0
