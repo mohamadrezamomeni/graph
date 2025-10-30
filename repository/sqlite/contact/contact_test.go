@@ -5,6 +5,9 @@ import (
 	"testing"
 
 	contactRepoDto "github.com/mohamadrezamomeni/graph/dto/repository/contact"
+	"github.com/mohamadrezamomeni/graph/entity"
+	appLogger "github.com/mohamadrezamomeni/graph/pkg/log"
+	"github.com/mohamadrezamomeni/graph/pkg/utils"
 	"github.com/mohamadrezamomeni/graph/repository/migrate"
 	"github.com/mohamadrezamomeni/graph/repository/sqlite"
 )
@@ -17,6 +20,8 @@ func TestMain(m *testing.M) {
 	}
 
 	migrate := migrate.New(config)
+	appLogger.Discard()
+
 	migrate.UP()
 
 	db := sqlite.New(config)
@@ -36,7 +41,7 @@ func TestCreateContact(t *testing.T) {
 	c1 := &contactRepoDto.Create{
 		FirstName: "ali",
 		LastName:  "pirzadeh",
-		Phones:    []string{"+989123456789", "+989113456789"},
+		Phones:    []string{"09123456789", "09113456789"},
 	}
 
 	err := contact.Create(c1)
@@ -47,11 +52,122 @@ func TestCreateContact(t *testing.T) {
 	c2 := &contactRepoDto.Create{
 		FirstName: "ali",
 		LastName:  "pirzadeh",
-		Phones:    []string{"+989123456789", "+989383456789"},
+		Phones:    []string{"09123456789", "09383456789"},
 	}
 
 	err = contact.Create(c2)
 	if err == nil {
 		t.Fatal("we expected an error but we got nothing")
 	}
+}
+
+func TestFilterContacts(t *testing.T) {
+	defer contact.deleteAll()
+
+	contact.Create(&contactRepoDto.Create{
+		FirstName: "ali",
+		LastName:  "Pirzadeh",
+		Phones:    []string{"09123456789", "09113456789"},
+	})
+	contact.Create(&contactRepoDto.Create{
+		FirstName: "ali",
+		LastName:  "Pirzadeh",
+		Phones:    []string{"09123455789", "09163456789"},
+	})
+	contact.Create(&contactRepoDto.Create{
+		FirstName: "yasin",
+		LastName:  "ahmadi",
+		Phones:    []string{"09173455781", "09663456734"},
+	})
+
+	contact.Create(&contactRepoDto.Create{
+		FirstName: "babak",
+		LastName:  "ahmadi",
+		Phones:    []string{"09173455782", "09663456783"},
+	})
+
+	contact.Create(&contactRepoDto.Create{
+		FirstName: "babak",
+		LastName:  "alvandi",
+		Phones:    []string{"09173455789", "09663456785"},
+	})
+
+	for i, testCase := range []struct {
+		input contactRepoDto.FilterContacts
+		count int
+	}{
+		{
+			input: contactRepoDto.FilterContacts{
+				FirstNames: []string{"ali", "yasin"},
+			},
+			count: 3,
+		},
+		{
+			input: contactRepoDto.FilterContacts{
+				LastNames: []string{"alvandi", "Pirzadeh"},
+			},
+			count: 3,
+		},
+		{
+			input: contactRepoDto.FilterContacts{
+				FirstNames: []string{"babak"},
+				LastNames:  []string{"alvandi", "Pirzadeh"},
+			},
+			count: 1,
+		},
+		{
+			input: contactRepoDto.FilterContacts{
+				FirstNames: []string{"babak"},
+				LastNames:  []string{"alvandi", "Pirzadeh"},
+				Phones:     []string{"09121111111"},
+			},
+			count: 0,
+		},
+		{
+			input: contactRepoDto.FilterContacts{
+				FirstNames: []string{"babak"},
+				LastNames:  []string{"alvandi", "Pirzadeh"},
+				Phones:     []string{"09173455789"},
+			},
+			count: 1,
+		},
+	} {
+		contacts, err := contact.FilterContacts(&testCase.input)
+		if err != nil {
+			t.Errorf("something went wrong at index %d the problem was %v", i, err)
+		} else if len(contacts) != testCase.count && isFilterContactsResponseValid(contacts, &testCase.input) {
+			t.Errorf("error to compare data at %d", i)
+		}
+	}
+}
+
+func isFilterContactsResponseValid(
+	contacts []*entity.Contact,
+	filterDto *contactRepoDto.FilterContacts,
+) bool {
+	for _, contact := range contacts {
+		isCondistionSatisFiy := true
+		if filterDto.FirstNames != nil && len(filterDto.FirstNames) > 0 {
+			isCondistionSatisFiy = utils.IsContain(contact.FistName, filterDto.FirstNames)
+		}
+		if filterDto.LastNames != nil && len(filterDto.LastNames) > 0 {
+			isCondistionSatisFiy = utils.IsContain(contact.LastName, filterDto.LastNames)
+		}
+		if filterDto.Phones != nil && len(filterDto.Phones) > 0 {
+			isCondistionSatisFiy = hasCommonPhone(filterDto.Phones, contact.Phones)
+		}
+		if isCondistionSatisFiy != false {
+			return false
+		}
+	}
+	return true
+}
+
+func hasCommonPhone(filterPhones []string, contactPhones []string) bool {
+	for _, phone := range contactPhones {
+		if dd := utils.IsContain(phone, filterPhones); dd {
+			return true
+		}
+	}
+	return false
 }

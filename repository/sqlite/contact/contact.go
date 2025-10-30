@@ -3,7 +3,9 @@ package contact
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
+	"github.com/mohamadrezamomeni/graph/entity"
 	"github.com/mohamadrezamomeni/graph/repository/sqlite"
 
 	contactRepoDto "github.com/mohamadrezamomeni/graph/dto/repository/contact"
@@ -86,6 +88,87 @@ func (c *Contact) assignPhones(tx *sql.Tx, contactID string, phones []string) er
 	}
 
 	return nil
+}
+
+func (c *Contact) FilterContacts(filterDto *contactRepoDto.FilterContacts) ([]*entity.Contact, error) {
+	scope := "repository.contact.FilterContacts"
+
+	query := c.makeFilterContactsQuery(filterDto)
+	rows, err := c.db.Conn().Query(query)
+	if err != nil {
+		return nil, appErr.Wrap(err).Scope(scope).Input(filterDto).Errorf("error to query")
+	}
+	defer rows.Close()
+
+	return c.scanContacts(rows)
+}
+
+func (c *Contact) makeFilterContactsQuery(filterDto *contactRepoDto.FilterContacts) string {
+	query := "SELECT * FROM contacts"
+
+	subQueries := make([]string, 0)
+
+	if filterDto.FirstNames != nil && len(filterDto.FirstNames) > 0 {
+		subQueries = append(subQueries,
+			fmt.Sprintf("first_name IN ('%s')", strings.Join(filterDto.FirstNames, "', '")),
+		)
+	}
+
+	if filterDto.LastNames != nil && len(filterDto.LastNames) > 0 {
+		subQueries = append(subQueries,
+			fmt.Sprintf("last_name IN ('%s')", strings.Join(filterDto.LastNames, "', '")),
+		)
+	}
+
+	if len(subQueries) > 0 {
+		query = fmt.Sprintf("%s WHERE %s", query, strings.Join(subQueries, " AND "))
+	}
+
+	queryIncludedPhones := fmt.Sprintf(
+		"SELECT c.id, c.first_name, c.last_name, GROUP_CONCAT(p.phone, ',') AS phones "+
+			"FROM (%s) AS c "+
+			"LEFT JOIN phones AS p ON c.id = p.contact_id",
+		query,
+	)
+
+	if filterDto.Phones != nil && len(filterDto.Phones) > 0 {
+		queryIncludedPhones = fmt.Sprintf(
+			"SELECT c.id, c.first_name, c.last_name, GROUP_CONCAT(p.phone, ',') AS phones "+
+				"FROM (%s) AS c "+
+				"INNER JOIN phones AS p ON c.id = p.contact_id  AND p.phone IN ('%s')",
+			query,
+			strings.Join(filterDto.Phones, "', '"),
+		)
+	}
+
+	queryIncludedPhones += " GROUP BY c.id, c.first_name, c.last_name"
+
+	return queryIncludedPhones
+}
+
+func (c *Contact) scanContacts(rows *sql.Rows) ([]*entity.Contact, error) {
+	scope := "repository.contact.scanContacts"
+
+	contacts := make([]*entity.Contact, 0)
+	for rows.Next() {
+		var phones sql.NullString
+		contact := new(entity.Contact)
+
+		err := rows.Scan(&contact.ID, &contact.FistName, &contact.LastName, &phones)
+		if err != nil {
+			return nil, appErr.Wrap(err).Scope(scope).Errorf("error to scan")
+		}
+
+		if phones.Valid {
+			contact.Phones = strings.Split(phones.String, ",")
+		} else {
+			contact.Phones = []string{}
+		}
+
+		contacts = append(contacts, contact)
+	}
+
+	return contacts, nil
 }
 
 func (c *Contact) deleteAll() error {
