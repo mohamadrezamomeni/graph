@@ -133,9 +133,10 @@ func (c *Contact) makeFilterContactsQuery(filterDto *contactRepoDto.FilterContac
 
 	if filterDto.Phones != nil && len(filterDto.Phones) > 0 {
 		queryIncludedPhones = fmt.Sprintf(
-			"SELECT c.id, c.first_name, c.last_name, GROUP_CONCAT(p.phone, ',') AS phones "+
+			"SELECT c.id, c.first_name, c.last_name, GROUP_CONCAT(p2.phone, ',') AS phones "+
 				"FROM (%s) AS c "+
-				"INNER JOIN phones AS p ON c.id = p.contact_id  AND p.phone IN ('%s')",
+				"INNER JOIN phones AS p ON c.id = p.contact_id  AND p.phone IN ('%s')"+
+				"LEFT JOIN phones AS p2 ON p2.contact_id = c.id",
 			query,
 			strings.Join(filterDto.Phones, "', '"),
 		)

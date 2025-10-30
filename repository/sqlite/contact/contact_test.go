@@ -61,6 +61,37 @@ func TestCreateContact(t *testing.T) {
 	}
 }
 
+func TestFilterContactsByPhonesGetingComplete(t *testing.T) {
+	defer contact.deleteAll()
+
+	contact.Create(&contactRepoDto.Create{
+		FirstName: "ali",
+		LastName:  "Pirzadeh",
+		Phones:    []string{"09123456789", "09113456789"},
+	})
+
+	contact.Create(&contactRepoDto.Create{
+		FirstName: "ali",
+		LastName:  "Pirzadeh",
+		Phones:    []string{"09123455789", "09163456789"},
+	})
+
+	contacts, err := contact.FilterContacts(&contactRepoDto.FilterContacts{
+		Phones: []string{"09123455789"},
+	})
+	if err != nil {
+		t.Fatalf("something went wrong that was %v", err)
+	}
+
+	if len(contacts) != 1 {
+		t.Fatalf("error to compare data we expected the lengh of result be 1 but we got %d", len(contacts))
+	}
+
+	if len(contacts[0].Phones) != 2 {
+		t.Fatalf("we expected we got complete phones but we got the phones we query")
+	}
+}
+
 func TestFilterContacts(t *testing.T) {
 	defer contact.deleteAll()
 
