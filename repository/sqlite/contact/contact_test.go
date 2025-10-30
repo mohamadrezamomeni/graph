@@ -76,7 +76,7 @@ func TestFilterContactsByPhonesGetingComplete(t *testing.T) {
 		Phones:    []string{"09123455789", "09163456789"},
 	})
 
-	contacts, err := contact.FilterContacts(&contactRepoDto.FilterContacts{
+	contacts, err := contact.Filter(&contactRepoDto.Filter{
 		Phones: []string{"09123455789"},
 	})
 	if err != nil {
@@ -124,30 +124,30 @@ func TestFilterContacts(t *testing.T) {
 	})
 
 	for i, testCase := range []struct {
-		input contactRepoDto.FilterContacts
+		input contactRepoDto.Filter
 		count int
 	}{
 		{
-			input: contactRepoDto.FilterContacts{
+			input: contactRepoDto.Filter{
 				FirstNames: []string{"ali", "yasin"},
 			},
 			count: 3,
 		},
 		{
-			input: contactRepoDto.FilterContacts{
+			input: contactRepoDto.Filter{
 				LastNames: []string{"alvandi", "Pirzadeh"},
 			},
 			count: 3,
 		},
 		{
-			input: contactRepoDto.FilterContacts{
+			input: contactRepoDto.Filter{
 				FirstNames: []string{"babak"},
 				LastNames:  []string{"alvandi", "Pirzadeh"},
 			},
 			count: 1,
 		},
 		{
-			input: contactRepoDto.FilterContacts{
+			input: contactRepoDto.Filter{
 				FirstNames: []string{"babak"},
 				LastNames:  []string{"alvandi", "Pirzadeh"},
 				Phones:     []string{"09121111111"},
@@ -155,7 +155,7 @@ func TestFilterContacts(t *testing.T) {
 			count: 0,
 		},
 		{
-			input: contactRepoDto.FilterContacts{
+			input: contactRepoDto.Filter{
 				FirstNames: []string{"babak"},
 				LastNames:  []string{"alvandi", "Pirzadeh"},
 				Phones:     []string{"09173455789"},
@@ -163,7 +163,7 @@ func TestFilterContacts(t *testing.T) {
 			count: 1,
 		},
 	} {
-		contacts, err := contact.FilterContacts(&testCase.input)
+		contacts, err := contact.Filter(&testCase.input)
 		if err != nil {
 			t.Errorf("something went wrong at index %d the problem was %v", i, err)
 		} else if len(contacts) != testCase.count && isFilterContactsResponseValid(contacts, &testCase.input) {
@@ -174,7 +174,7 @@ func TestFilterContacts(t *testing.T) {
 
 func isFilterContactsResponseValid(
 	contacts []*entity.Contact,
-	filterDto *contactRepoDto.FilterContacts,
+	filterDto *contactRepoDto.Filter,
 ) bool {
 	for _, contact := range contacts {
 		isCondistionSatisFiy := true

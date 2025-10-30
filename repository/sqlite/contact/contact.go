@@ -90,7 +90,7 @@ func (c *Contact) assignPhones(tx *sql.Tx, contactID string, phones []string) er
 	return nil
 }
 
-func (c *Contact) FilterContacts(filterDto *contactRepoDto.FilterContacts) ([]*entity.Contact, error) {
+func (c *Contact) Filter(filterDto *contactRepoDto.Filter) ([]*entity.Contact, error) {
 	scope := "repository.contact.FilterContacts"
 
 	query := c.makeFilterContactsQuery(filterDto)
@@ -103,7 +103,7 @@ func (c *Contact) FilterContacts(filterDto *contactRepoDto.FilterContacts) ([]*e
 	return c.scanContacts(rows)
 }
 
-func (c *Contact) makeFilterContactsQuery(filterDto *contactRepoDto.FilterContacts) string {
+func (c *Contact) makeFilterContactsQuery(filterDto *contactRepoDto.Filter) string {
 	query := "SELECT * FROM contacts"
 
 	subQueries := make([]string, 0)
