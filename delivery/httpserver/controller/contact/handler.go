@@ -14,6 +14,7 @@ type Handler struct {
 type ContactService interface {
 	Create(*serviceDto.Create) error
 	Filter(*serviceDto.Filter) ([]*entity.Contact, error)
+	Update(string, *serviceDto.Update) error
 }
 
 func New(

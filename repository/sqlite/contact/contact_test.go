@@ -12,7 +12,7 @@ import (
 	"github.com/mohamadrezamomeni/graph/repository/sqlite"
 )
 
-var contact *Contact
+var contactRepo *Contact
 
 func TestMain(m *testing.M) {
 	config := &sqlite.DBConfig{
@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 
 	db := sqlite.New(config)
 
-	contact = New(db)
+	contactRepo = New(db)
 
 	code := m.Run()
 
@@ -35,8 +35,30 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func TestUpdatingContact(t *testing.T) {
+	defer contactRepo.deleteAll()
+
+	id, err := contactRepo.Create(&contactRepoDto.Create{
+		FirstName: "ali",
+		LastName:  "pirzadeh",
+		Phones:    []string{"09123456789", "09113456789"},
+	})
+	if err != nil {
+		t.Fatalf("error to create data")
+	}
+
+	err = contactRepo.Update(id, &contactRepoDto.Update{
+		FirstName: "ali",
+		LastName:  "pirzadeh",
+		Phones:    []string{"09127853850", "09127853851"},
+	})
+	if err != nil {
+		t.Fatalf("error to update data")
+	}
+}
+
 func TestCreateContact(t *testing.T) {
-	defer contact.deleteAll()
+	defer contactRepo.deleteAll()
 
 	c1 := &contactRepoDto.Create{
 		FirstName: "ali",
@@ -44,7 +66,7 @@ func TestCreateContact(t *testing.T) {
 		Phones:    []string{"09123456789", "09113456789"},
 	}
 
-	err := contact.Create(c1)
+	_, err := contactRepo.Create(c1)
 	if err != nil {
 		t.Fatalf("somehting went wrong that was %v", err)
 	}
@@ -55,28 +77,28 @@ func TestCreateContact(t *testing.T) {
 		Phones:    []string{"09123456789", "09383456789"},
 	}
 
-	err = contact.Create(c2)
+	_, err = contactRepo.Create(c2)
 	if err == nil {
 		t.Fatal("we expected an error but we got nothing")
 	}
 }
 
 func TestFilterContactsByPhonesGetingComplete(t *testing.T) {
-	defer contact.deleteAll()
+	defer contactRepo.deleteAll()
 
-	contact.Create(&contactRepoDto.Create{
+	contactRepo.Create(&contactRepoDto.Create{
 		FirstName: "ali",
 		LastName:  "Pirzadeh",
 		Phones:    []string{"09123456789", "09113456789"},
 	})
 
-	contact.Create(&contactRepoDto.Create{
+	contactRepo.Create(&contactRepoDto.Create{
 		FirstName: "ali",
 		LastName:  "Pirzadeh",
 		Phones:    []string{"09123455789", "09163456789"},
 	})
 
-	contacts, err := contact.Filter(&contactRepoDto.Filter{
+	contacts, err := contactRepo.Filter(&contactRepoDto.Filter{
 		Phones: []string{"09123455789"},
 	})
 	if err != nil {
@@ -93,31 +115,31 @@ func TestFilterContactsByPhonesGetingComplete(t *testing.T) {
 }
 
 func TestFilterContacts(t *testing.T) {
-	defer contact.deleteAll()
+	defer contactRepo.deleteAll()
 
-	contact.Create(&contactRepoDto.Create{
+	contactRepo.Create(&contactRepoDto.Create{
 		FirstName: "ali",
 		LastName:  "Pirzadeh",
 		Phones:    []string{"09123456789", "09113456789"},
 	})
-	contact.Create(&contactRepoDto.Create{
+	contactRepo.Create(&contactRepoDto.Create{
 		FirstName: "ali",
 		LastName:  "Pirzadeh",
 		Phones:    []string{"09123455789", "09163456789"},
 	})
-	contact.Create(&contactRepoDto.Create{
+	contactRepo.Create(&contactRepoDto.Create{
 		FirstName: "yasin",
 		LastName:  "ahmadi",
 		Phones:    []string{"09173455781", "09663456734"},
 	})
 
-	contact.Create(&contactRepoDto.Create{
+	contactRepo.Create(&contactRepoDto.Create{
 		FirstName: "babak",
 		LastName:  "ahmadi",
 		Phones:    []string{"09173455782", "09663456783"},
 	})
 
-	contact.Create(&contactRepoDto.Create{
+	contactRepo.Create(&contactRepoDto.Create{
 		FirstName: "babak",
 		LastName:  "alvandi",
 		Phones:    []string{"09173455789", "09663456785"},
@@ -163,7 +185,7 @@ func TestFilterContacts(t *testing.T) {
 			count: 1,
 		},
 	} {
-		contacts, err := contact.Filter(&testCase.input)
+		contacts, err := contactRepo.Filter(&testCase.input)
 		if err != nil {
 			t.Errorf("something went wrong at index %d the problem was %v", i, err)
 		} else if len(contacts) != testCase.count && isFilterContactsResponseValid(contacts, &testCase.input) {

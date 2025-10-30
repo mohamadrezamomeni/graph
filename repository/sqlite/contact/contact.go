@@ -12,34 +12,88 @@ import (
 	appErr "github.com/mohamadrezamomeni/graph/pkg/error"
 )
 
-func (c *Contact) Create(createDto *contactRepoDto.Create) error {
+func (c *Contact) Update(id string, updateDto *contactRepoDto.Update) error {
+	scope := "repository.contact.update"
+
+	tx, err := c.db.Conn().Begin()
+	if err != nil {
+		return err
+	}
+
+	err = c.deleteContactPhones(tx, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = c.assignPhones(tx, id, updateDto.Phones)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = c.updateContact(tx, id, updateDto)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return appErr.Wrap(err).Scope(scope).Errorf("error to commit")
+	}
+	return nil
+}
+
+func (c *Contact) updateContact(tx *sql.Tx, id string, updateDto *contactRepoDto.Update) error {
+	scope := "repository.contact.updateContact"
+
+	_, err := tx.Exec(
+		"UPDATE contacts SET first_name = ?, last_name = ? WHERE id = ?",
+		updateDto.FirstName, updateDto.LastName, id,
+	)
+	if err != nil {
+		return appErr.Wrap(err).Scope(scope).Input(id, updateDto).ErrorWrite()
+	}
+	return nil
+}
+
+func (c *Contact) deleteContactPhones(tx *sql.Tx, id string) error {
+	scope := "repository.contact.deleteExistedPhones"
+	_, err := tx.Exec("DELETE FROM Phones WHERE contact_id = $1", id)
+	if err != nil {
+		return appErr.Wrap(err).Scope(scope).Input(id).ErrorWrite()
+	}
+	return nil
+}
+
+func (c *Contact) Create(createDto *contactRepoDto.Create) (string, error) {
 	scope := "repository.contact.create"
 
 	tx, err := c.db.Conn().Begin()
 	if err != nil {
-		return appErr.Wrap(err).Scope(scope).ErrorWrite()
+		return "", appErr.Wrap(err).Scope(scope).ErrorWrite()
 	}
 
 	contactID, err := c.createContact(tx, createDto)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return "", err
 	}
 
 	err = c.assignPhones(tx, contactID, createDto.Phones)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return "", err
 	}
 
 	if err != nil {
 		tx.Rollback()
-		return err
+		return "", err
 	}
 	if err := tx.Commit(); err != nil {
-		return appErr.Wrap(err).Scope(scope).Errorf("error to commit")
+		return "", appErr.Wrap(err).Scope(scope).Errorf("error to commit")
 	}
-	return nil
+	return contactID, nil
 }
 
 func (c *Contact) createContact(tx *sql.Tx, createDto *contactRepoDto.Create) (string, error) {
