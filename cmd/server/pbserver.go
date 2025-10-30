@@ -6,7 +6,6 @@ import (
 	"os/signal"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/mohamadrezamomeni/graph/delivery/httpserver"
 	"github.com/mohamadrezamomeni/graph/pkg/config"
 	appLogger "github.com/mohamadrezamomeni/graph/pkg/log"

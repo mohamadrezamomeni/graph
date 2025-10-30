@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"path/filepath"
 
+	_ "github.com/mattn/go-sqlite3"
 	appError "github.com/mohamadrezamomeni/graph/pkg/error"
 	"github.com/mohamadrezamomeni/graph/pkg/utils"
 )
@@ -17,7 +18,7 @@ func (s *SqliteDB) Conn() *sql.DB {
 }
 
 func New(cfg *DBConfig) *SqliteDB {
-	const scope = "postgres.New"
+	const scope = "sqlite.New"
 
 	root, err := utils.GetRootOfProject()
 	if err != nil {
@@ -41,6 +42,7 @@ func New(cfg *DBConfig) *SqliteDB {
 				Errorf("failed to open SQLite database at path %s: %s", dbPath, err.Error()),
 		)
 	}
+	db.Exec("PRAGMA foreign_keys = ON")
 
 	return &SqliteDB{
 		db: db,
