@@ -3,10 +3,19 @@ package httperror
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	appError "github.com/mohamadrezamomeni/graph/pkg/error"
+	appLogger "github.com/mohamadrezamomeni/graph/pkg/log"
 )
+
+func TestMain(m *testing.M) {
+	appLogger.Discard()
+	code := m.Run()
+
+	os.Exit(code)
+}
 
 func TestStatus(t *testing.T) {
 	for _, testCase := range []struct {

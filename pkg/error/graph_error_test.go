@@ -2,8 +2,18 @@ package error
 
 import (
 	"fmt"
+	"os"
 	"testing"
+
+	appLogger "github.com/mohamadrezamomeni/graph/pkg/log"
 )
+
+func TestMain(m *testing.M) {
+	appLogger.Discard()
+	code := m.Run()
+
+	os.Exit(code)
+}
 
 func TestWithoutMainError(t *testing.T) {
 	scopeTest := "test.TestWithoutMainError"

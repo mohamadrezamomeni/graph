@@ -16,6 +16,10 @@ func init() {
 	logger.SetLevel(logrus.DebugLevel)
 }
 
+func Discard() {
+	logger.SetOutput(io.Discard)
+}
+
 func Infof(format string, args ...any) {
 	logger.Infof(format, args...)
 }
