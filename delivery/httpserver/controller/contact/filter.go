@@ -25,10 +25,10 @@ func (h *Handler) Filter(c echo.Context) error {
 	if len(req.FirstNames) > 0 {
 		filterServiceDto.FirstNames = strings.Split(req.FirstNames, ",")
 	}
-	if len(req.Phones) > 0 {
+	if len(req.LastNames) > 0 {
 		filterServiceDto.LastNames = strings.Split(req.LastNames, ",")
 	}
-	if len(req.LastNames) > 0 {
+	if len(req.Phones) > 0 {
 		filterServiceDto.Phones = strings.Split(req.Phones, ",")
 	}
 	contacts, err := h.contactSvc.Filter(filterServiceDto)
