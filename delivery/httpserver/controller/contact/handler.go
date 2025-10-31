@@ -1,14 +1,14 @@
 package contact
 
 import (
+	contactControllerDto "github.com/mohamadrezamomeni/graph/dto/controller/contact"
 	serviceDto "github.com/mohamadrezamomeni/graph/dto/service/contact"
 	"github.com/mohamadrezamomeni/graph/entity"
-	contactValidator "github.com/mohamadrezamomeni/graph/validator/contact"
 )
 
 type Handler struct {
 	contactSvc       ContactService
-	contactValidator *contactValidator.Validator
+	contactValidator ContactValidation
 }
 
 type ContactService interface {
@@ -17,9 +17,14 @@ type ContactService interface {
 	Update(string, *serviceDto.Update) error
 }
 
+type ContactValidation interface {
+	ValidateUpdating(contactControllerDto.Update) error
+	ValidateCreating(contactControllerDto.Create) error
+}
+
 func New(
 	contactSvc ContactService,
-	contactValidator *contactValidator.Validator,
+	contactValidator ContactValidation,
 ) *Handler {
 	return &Handler{
 		contactSvc:       contactSvc,
