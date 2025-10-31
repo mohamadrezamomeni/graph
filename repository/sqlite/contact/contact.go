@@ -163,14 +163,23 @@ func (c *Contact) makeFilterContactsQuery(filterDto *contactRepoDto.Filter) stri
 	subQueries := make([]string, 0)
 
 	if filterDto.FirstNames != nil && len(filterDto.FirstNames) > 0 {
-		subQueries = append(subQueries,
+		subQueries = append(
+			subQueries,
 			fmt.Sprintf("first_name IN ('%s')", strings.Join(filterDto.FirstNames, "', '")),
 		)
 	}
 
 	if filterDto.LastNames != nil && len(filterDto.LastNames) > 0 {
-		subQueries = append(subQueries,
+		subQueries = append(
+			subQueries,
 			fmt.Sprintf("last_name IN ('%s')", strings.Join(filterDto.LastNames, "', '")),
+		)
+	}
+
+	if filterDto.Phones != nil && len(filterDto.Phones) > 0 {
+		subQueries = append(
+			subQueries,
+			fmt.Sprintf("id IN (SELECT contact_id FROM phones WHERE phone IN ('%s'))", strings.Join(filterDto.Phones, "', '")),
 		)
 	}
 
@@ -184,17 +193,6 @@ func (c *Contact) makeFilterContactsQuery(filterDto *contactRepoDto.Filter) stri
 			"LEFT JOIN phones AS p ON c.id = p.contact_id",
 		query,
 	)
-
-	if filterDto.Phones != nil && len(filterDto.Phones) > 0 {
-		queryIncludedPhones = fmt.Sprintf(
-			"SELECT c.id, c.first_name, c.last_name, GROUP_CONCAT(p2.phone, ',') AS phones "+
-				"FROM (%s) AS c "+
-				"INNER JOIN phones AS p ON c.id = p.contact_id  AND p.phone IN ('%s')"+
-				"LEFT JOIN phones AS p2 ON p2.contact_id = c.id",
-			query,
-			strings.Join(filterDto.Phones, "', '"),
-		)
-	}
 
 	queryIncludedPhones += " GROUP BY c.id, c.first_name, c.last_name"
 
