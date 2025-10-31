@@ -76,6 +76,7 @@ func (c *ContactProxy) makeUriContacts(filterDto *contactProxy.Filter) (string, 
 		q.Set("last_names", strings.Join(filterDto.LastNames, ","))
 	}
 
+	u.RawQuery = q.Encode()
 	return u.String(), nil
 }
 
