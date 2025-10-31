@@ -42,7 +42,8 @@ func (h *Handler) Filter(c echo.Context) error {
 
 	for _, concat := range contacts {
 		concatSerializer.Items = append(concatSerializer.Items, &serializer.Contact{
-			FirstName: concat.FistName,
+			ID:        concat.ID,
+			FirstName: concat.FirstName,
 			LastName:  concat.LastName,
 			Phones:    concat.Phones,
 		})

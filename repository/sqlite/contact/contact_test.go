@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	}
 
 	migrate := migrate.New(config)
-	appLogger.Discard()
+	appLogger.DiscardLogging()
 
 	migrate.UP()
 
@@ -201,7 +201,7 @@ func isFilterContactsResponseValid(
 	for _, contact := range contacts {
 		isCondistionSatisFiy := true
 		if filterDto.FirstNames != nil && len(filterDto.FirstNames) > 0 {
-			isCondistionSatisFiy = utils.IsContain(contact.FistName, filterDto.FirstNames)
+			isCondistionSatisFiy = utils.IsContain(contact.FirstName, filterDto.FirstNames)
 		}
 		if filterDto.LastNames != nil && len(filterDto.LastNames) > 0 {
 			isCondistionSatisFiy = utils.IsContain(contact.LastName, filterDto.LastNames)

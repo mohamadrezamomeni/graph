@@ -209,7 +209,7 @@ func (c *Contact) scanContacts(rows *sql.Rows) ([]*entity.Contact, error) {
 		var phones sql.NullString
 		contact := new(entity.Contact)
 
-		err := rows.Scan(&contact.ID, &contact.FistName, &contact.LastName, &phones)
+		err := rows.Scan(&contact.ID, &contact.FirstName, &contact.LastName, &phones)
 		if err != nil {
 			return nil, appErr.Wrap(err).Scope(scope).Errorf("error to scan")
 		}

@@ -16,7 +16,7 @@ func init() {
 	logger.SetLevel(logrus.DebugLevel)
 }
 
-func Discard() {
+func DiscardLogging() {
 	logger.SetOutput(io.Discard)
 }
 

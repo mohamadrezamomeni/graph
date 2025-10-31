@@ -9,7 +9,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	appLogger.Discard()
+	appLogger.DiscardLogging()
 	code := m.Run()
 
 	os.Exit(code)
